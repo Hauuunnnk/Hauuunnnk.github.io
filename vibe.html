@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css?family=Inter&display=swap" rel="stylesheet" />
+  <title>Vibe Coding / HANK J.</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      background: rgba(243, 240, 233, 1);
+      color: rgba(37, 39, 34, 1);
+    }
+    body {
+      font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    a:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 4px;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 5vw 0;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+      transition: color 0.2s ease;
+    }
+    .brand:hover,
+    .back:hover,
+    .mail:hover {
+      color: rgba(161, 93, 72, 1);
+    }
+    .back {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(102, 113, 106, 1);
+      transition: color 0.2s ease;
+    }
+    main {
+      padding: clamp(40px, 7vh, 96px) 5vw 0;
+    }
+    .kicker {
+      margin: 0 0 18px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: rgba(161, 93, 72, 1);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5.6vw, 84px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      max-width: 16em;
+    }
+    h1 .accent {
+      color: rgba(161, 93, 72, 1);
+    }
+    .note {
+      margin: 22px 0 0;
+      font-size: clamp(14px, 1.2vw, 17px);
+      line-height: 1.7;
+      color: rgba(102, 113, 106, 1);
+      max-width: 34em;
+    }
+    .mail {
+      display: inline-block;
+      margin-top: 26px;
+      font-size: clamp(13px, 1.1vw, 15px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: color 0.2s ease;
+    }
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: clamp(24px, 4vw, 64px);
+      margin: clamp(40px, 7vh, 88px) 0 0;
+      padding: 0 5vw;
+    }
+    .shot {
+      margin: 0;
+      max-width: 460px;
+    }
+    .shot:nth-child(2) {
+      justify-self: end;
+      max-width: 320px;
+    }
+    .frame {
+      display: block;
+      overflow: hidden;
+      transform-origin: 55% 70%;
+      animation: dnd-float 3.8s ease-in-out infinite alternate;
+      box-shadow: 0 24px 48px -24px rgba(37, 39, 34, 0.35);
+    }
+    .shot:nth-child(2) .frame {
+      animation-delay: -1.9s;
+      transform: rotate(2deg);
+    }
+    .shot:nth-child(1) .frame {
+      transform: rotate(-1.5deg);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      a.frame {
+        transition: scale 0.3s ease;
+      }
+      a.frame:hover {
+        scale: 1.04;
+        animation: dnd-float 3.8s ease-in-out infinite alternate,
+          dnd-sway 2.4s ease-in-out infinite alternate;
+      }
+      .frame:hover {
+        animation: dnd-float 3.8s ease-in-out infinite alternate,
+          dnd-sway 2.4s ease-in-out infinite alternate;
+      }
+    }
+    @keyframes dnd-float {
+      from {
+        translate: var(--fx, 0px) var(--fy, 0px);
+      }
+      to {
+        translate: var(--fx, 0px) calc(var(--fy, 0px) - 8px);
+      }
+    }
+    @keyframes dnd-sway {
+      from {
+        transform: rotate(-1.8deg);
+      }
+      to {
+        transform: rotate(1.8deg);
+      }
+    }
+    .frame img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    figcaption {
+      margin-top: 14px;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      color: rgba(102, 113, 106, 1);
+      transition: color 0.2s ease;
+    }
+    a.frame + figcaption,
+    a.shot:hover figcaption {
+      color: rgba(161, 93, 72, 1);
+    }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 26px 5vw 30px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: rgba(102, 113, 106, 1);
+    }
+    @media (max-width: 640px) {
+      .top {
+        padding: 20px 20px 0;
+      }
+      main {
+        padding: 36px 20px 0;
+      }
+      .shots {
+        padding: 0 20px;
+      }
+      .shot:nth-child(2) {
+        justify-self: start;
+      }
+      footer {
+        padding: 22px 20px 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./index.html" aria-label="Back to home">H / J.</a>
+    <a class="back" href="./index.html">← BACK</a>
+  </header>
+
+  <main>
+    <p class="kicker">VIBE CODING</p>
+    <h1>Sure I will do <span class="accent">vibe coding</span>…<br />AI is too good!</h1>
+    <p class="note">想法进来，交给 AI，东西就出来了。下面两个就是这么来的。</p>
+    <a class="mail" href="mailto:hankjin@moonshotacademy.cn" data-copy-email="hankjin@moonshotacademy.cn">hankjin@moonshotacademy.cn</a>
+  </main>
+
+  <div class="shots">
+    <figure class="shot">
+      <a class="frame" href="https://arcanefable.base44.app" target="_blank" rel="noopener noreferrer" aria-label="Open Arcane Fable">
+        <img src="./images/v13_30.png" alt="Arcane Fable app screenshot" />
+      </a>
+      <figcaption>ARCANE FABLE&nbsp;&nbsp;↗</figcaption>
+    </figure>
+    <figure class="shot">
+      <span class="frame">
+        <img src="./images/v13_35.png" alt="HW Helper mini program QR card" />
+      </span>
+      <figcaption>HW HELPER&nbsp;&nbsp;·&nbsp;&nbsp;SCAN TO TRY</figcaption>
+    </figure>
+  </div>
+
+  <footer>
+    <span>© 2026 / HANK J.</span>
+    <span>JUST VIBE.</span>
+  </footer>
+
+  <script>
+    // 可点击图片：鼠标悬停时轻微跟随鼠标移动。
+    (function () {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      document.querySelectorAll('a.frame').forEach(function (el) {
+        var maxShift = 10;
+        var targetX = 0;
+        var targetY = 0;
+        var currentX = 0;
+        var currentY = 0;
+        var rafId = null;
+
+        function tick() {
+          currentX += (targetX - currentX) * 0.12;
+          currentY += (targetY - currentY) * 0.12;
+          el.style.setProperty('--fx', currentX.toFixed(2) + 'px');
+          el.style.setProperty('--fy', currentY.toFixed(2) + 'px');
+          if (Math.abs(targetX - currentX) > 0.1 || Math.abs(targetY - currentY) > 0.1) {
+            rafId = window.requestAnimationFrame(tick);
+          } else {
+            rafId = null;
+          }
+        }
+
+        function kick() {
+          if (rafId === null) rafId = window.requestAnimationFrame(tick);
+        }
+
+        el.addEventListener('mousemove', function (event) {
+          var rect = el.getBoundingClientRect();
+          targetX = ((event.clientX - rect.left) / rect.width - 0.5) * 2 * maxShift;
+          targetY = ((event.clientY - rect.top) / rect.height - 0.5) * 2 * maxShift;
+          kick();
+        });
+        el.addEventListener('mouseleave', function () {
+          targetX = 0;
+          targetY = 0;
+          kick();
+        });
+      });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      document.querySelectorAll('a[data-copy-email]').forEach(function (link) {
+        var original = link.textContent;
+        var timer = null;
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          var email = link.getAttribute('data-copy-email');
+          function done() {
+            link.textContent = 'COPIED  ' + email;
+            if (timer) window.clearTimeout(timer);
+            timer = window.setTimeout(function () {
+              link.textContent = original;
+            }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(email).then(done, function () {
+              window.location.href = 'mailto:' + email;
+            });
+          } else {
+            window.location.href = 'mailto:' + email;
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

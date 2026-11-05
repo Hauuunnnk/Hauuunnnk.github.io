@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css?family=Inter&display=swap" rel="stylesheet" />
+  <title>Sleeping Memories / HANK J.</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      background: rgba(243, 240, 233, 1);
+      color: rgba(37, 39, 34, 1);
+    }
+    body {
+      font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    a:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 4px;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 5vw 0;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+      transition: color 0.2s ease;
+    }
+    .brand:hover,
+    .back:hover,
+    .mail:hover {
+      color: rgba(161, 93, 72, 1);
+    }
+    .back {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(102, 113, 106, 1);
+      transition: color 0.2s ease;
+    }
+    main {
+      padding: clamp(40px, 7vh, 96px) 5vw 0;
+    }
+    .kicker {
+      margin: 0 0 18px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: rgba(161, 93, 72, 1);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(40px, 8.4vw, 124px);
+      font-weight: 700;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+    }
+    h1 .accent {
+      color: rgba(161, 93, 72, 1);
+    }
+    .note {
+      margin: 22px 0 0;
+      font-size: clamp(14px, 1.2vw, 17px);
+      line-height: 1.7;
+      color: rgba(102, 113, 106, 1);
+      max-width: 40em;
+    }
+    .mail {
+      display: inline-block;
+      margin-top: 26px;
+      font-size: clamp(13px, 1.1vw, 15px);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: color 0.2s ease;
+    }
+    .shot {
+      margin: clamp(40px, 7vh, 88px) 0 0;
+      width: 100%;
+      height: min(58vh, 620px);
+      overflow: hidden;
+      position: relative;
+    }
+    .shot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 42%;
+      display: block;
+    }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 26px 5vw 30px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: rgba(102, 113, 106, 1);
+    }
+    @media (max-width: 640px) {
+      .top {
+        padding: 20px 20px 0;
+      }
+      main {
+        padding: 36px 20px 0;
+      }
+      .shot {
+        height: 46vh;
+      }
+      footer {
+        padding: 22px 20px 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./index.html" aria-label="Back to home">H / J.</a>
+    <a class="back" href="./index.html">← BACK</a>
+  </header>
+
+  <main>
+    <p class="kicker">SLEEPING MEMORIES</p>
+    <h1><span class="accent">ZZZZZ</span>……</h1>
+    <p class="note">Oh, if you cannot find me on email, just go to MSA — usually I will be around the south door concert. For most of the time, staying in the corner of the room and doing one of these mentioned before! Good luck!</p>
+    <a class="mail" href="mailto:hankjin@moonshotacademy.cn" data-copy-email="hankjin@moonshotacademy.cn">hankjin@moonshotacademy.cn</a>
+  </main>
+
+  <figure class="shot">
+    <img src="./images/Sleeping memoies.jpg" alt="Hank asleep with his cat" />
+  </figure>
+
+  <footer>
+    <span>© 2026 / HANK J.</span>
+    <span>SHHH…</span>
+  </footer>
+
+  <script>
+    (function () {
+      document.querySelectorAll('a[data-copy-email]').forEach(function (link) {
+        var original = link.textContent;
+        var timer = null;
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          var email = link.getAttribute('data-copy-email');
+          function done() {
+            link.textContent = 'COPIED  ' + email;
+            if (timer) window.clearTimeout(timer);
+            timer = window.setTimeout(function () {
+              link.textContent = original;
+            }, 1600);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(email).then(done, function () {
+              window.location.href = 'mailto:' + email;
+            });
+          } else {
+            window.location.href = 'mailto:' + email;
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
