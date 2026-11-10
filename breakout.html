@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css?family=Inter&display=swap" rel="stylesheet" />
+  <title>Break Something / HANK J.</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      margin: 0;
+      background: rgba(243, 240, 233, 1);
+      color: rgba(37, 39, 34, 1);
+    }
+    body {
+      font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    a:focus-visible,
+    canvas:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 4px;
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 5vw 0;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+      transition: color 0.2s ease;
+    }
+    .brand:hover,
+    .back:hover {
+      color: rgba(161, 93, 72, 1);
+    }
+    .back {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(102, 113, 106, 1);
+      transition: color 0.2s ease;
+    }
+    main {
+      padding: clamp(28px, 4.5vh, 64px) 5vw 0;
+    }
+    .kicker {
+      margin: 0 0 18px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: rgba(161, 93, 72, 1);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 6.2vw, 90px);
+      font-weight: 700;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+    }
+    h1 .accent {
+      color: rgba(161, 93, 72, 1);
+    }
+    .note {
+      margin: 16px 0 0;
+      font-size: clamp(13px, 1.1vw, 16px);
+      line-height: 1.7;
+      color: rgba(102, 113, 106, 1);
+    }
+    .hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 880px;
+      margin: clamp(18px, 3vh, 32px) 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: rgba(102, 113, 106, 1);
+    }
+    .hud b {
+      color: rgba(37, 39, 34, 1);
+      font-weight: 700;
+    }
+    .lives {
+      letter-spacing: 0.3em;
+      color: rgba(161, 93, 72, 1);
+    }
+    .lives .off {
+      color: rgba(189, 188, 179, 1);
+    }
+    .board {
+      border: 1px solid rgba(189, 188, 179, 1);
+      background: rgba(237, 234, 226, 1);
+      max-width: 880px;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 11 / 7;
+      touch-action: none;
+    }
+    .status {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      max-width: 880px;
+      margin: 12px 0 0;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: rgba(102, 113, 106, 1);
+    }
+    .status span:last-child {
+      text-align: right;
+    }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 34px 5vw 30px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: rgba(102, 113, 106, 1);
+    }
+    @media (max-width: 640px) {
+      .top {
+        padding: 20px 20px 0;
+      }
+      main {
+        padding: 32px 20px 0;
+      }
+      footer {
+        padding: 26px 20px;
+      }
+      .note {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./index.html" aria-label="Back to home">H / J.</a>
+    <a class="back" href="./index.html">← BACK</a>
+  </header>
+
+  <main>
+    <p class="kicker">SIDE QUEST / 05</p>
+    <h1>BREAK<br /><span class="accent">SOMETHING.</span></h1>
+    <p class="note">按 ← → 移动挡板，按住不放可以一直移动。空格发球。</p>
+
+    <div class="hud">
+      <span>SCORE&nbsp;&nbsp;<b id="score">000</b></span>
+      <span class="lives" id="lives">●●●</span>
+    </div>
+
+    <div class="board">
+      <canvas id="game" tabindex="0" aria-label="打砖块游戏画面，空格发球，按住左右方向键移动挡板"></canvas>
+    </div>
+    <p class="status">
+      <span id="hint">按空格开始</span>
+      <span>HIT THE WALLS. NOT THE FLOOR.</span>
+    </p>
+
+  </main>
+
+  <footer>
+    <span>© 2026 / HANK J.</span>
+    <span>ONE MORE ROUND.</span>
+  </footer>
+
+  <script>
+    (function () {
+      var W = 880;
+      var H = 560;
+      var canvas = document.getElementById('game');
+      var ctx = canvas.getContext('2d');
+      var scoreEl = document.getElementById('score');
+      var livesEl = document.getElementById('lives');
+      var hintEl = document.getElementById('hint');
+
+      // ——— 音效：全部用 WebAudio 现场合成，不加载外部文件 ———
+      var actx = null;
+      var noiseBuf = null;
+
+      function audio() {
+        if (!actx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          actx = new AC();
+        }
+        if (actx.state === 'suspended') actx.resume();
+        return actx;
+      }
+
+      function noiseBuffer() {
+        var ac = audio();
+        if (!ac) return null;
+        if (!noiseBuf) {
+          noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.5), ac.sampleRate);
+          var data = noiseBuf.getChannelData(0);
+          for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        }
+        return noiseBuf;
+      }
+
+      function tone(freq, dur, type, vol, slideTo, delay) {
+        var ac = audio();
+        if (!ac) return;
+        var t = ac.currentTime + (delay || 0);
+        var osc = ac.createOscillator();
+        var gain = ac.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(vol || 0.1, t + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.connect(gain).connect(ac.destination);
+        osc.start(t);
+        osc.stop(t + dur + 0.04);
+      }
+
+      function noiseBurst(dur, cutoff, vol, delay) {
+        var ac = audio();
+        var buf = noiseBuffer();
+        if (!ac || !buf) return;
+        var t = ac.currentTime + (delay || 0);
+        var src = ac.createBufferSource();
+        src.buffer = buf;
+        var filter = ac.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(cutoff, t);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(160, cutoff * 0.2), t + dur);
+        var gain = ac.createGain();
+        gain.gain.setValueAtTime(vol || 0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(filter).connect(gain).connect(ac.destination);
+        src.start(t);
+        src.stop(t + dur + 0.02);
+      }
+
+      var sfx = {
+        brick: function (row) {
+          noiseBurst(0.07, 3200, 0.09);
+          tone(500 - row * 34, 0.07, 'triangle', 0.06);
+        },
+        paddle: function () { tone(210, 0.09, 'square', 0.05, 150); },
+        wall: function () { tone(330, 0.05, 'sine', 0.04, 285); },
+        boom: function () { noiseBurst(0.42, 1500, 0.26); tone(92, 0.34, 'sine', 0.22, 38); },
+        acid: function () { noiseBurst(0.28, 2600, 0.13); tone(760, 0.2, 'sine', 0.05, 250); },
+        sizzle: function () { noiseBurst(0.36, 1100, 0.16); tone(320, 0.3, 'sawtooth', 0.05, 80); },
+        heart: function () { tone(880, 0.1, 'triangle', 0.09); tone(1320, 0.16, 'triangle', 0.08, null, 0.09); },
+        lost: function () { tone(300, 0.38, 'sawtooth', 0.1, 88); },
+        win: function () {
+          [523, 659, 784, 1046].forEach(function (f, i) {
+            tone(f, 0.17, 'triangle', 0.075, null, i * 0.1);
+          });
+        },
+        punch: function () { noiseBurst(0.12, 2100, 0.3); tone(118, 0.18, 'sine', 0.32, 46); },
+        crack: function () { noiseBurst(0.18, 3400, 0.14); },
+        click: function () { tone(680, 0.05, 'square', 0.05, 520); }
+      };
+
+      var COLORS = [
+        'rgba(161,93,72,0.92)',
+        'rgba(209,163,140,0.95)',
+        'rgba(102,113,106,0.85)',
+        'rgba(201,188,168,0.95)'
+      ];
+      var COLS = 8;
+      var ROWS = 4;
+      var PAD = 44;
+      var GAP = 10;
+      var BRICK_H = 22;
+      var brickW = (W - PAD * 2 - GAP * (COLS - 1)) / COLS;
+      var paddleY = H - 46;
+      var paddleW = 104;
+      var paddleH = 10;
+      var ballR = 6;
+
+      var state = {
+        score: 0,
+        lives: 3,
+        running: false,
+        over: false,
+        won: false,
+        paddleX: W / 2,
+        targetX: W / 2,
+        speed: 400,
+        slowT: 0,
+        bricks: []
+      };
+      var ball = { x: W / 2, y: paddleY - ballR - 2, vx: 0, vy: 0, stuck: true };
+      var held = { left: false, right: false };
+      var drops = [];
+      var hearts = [];
+      var bumps = 0;
+      var shards = [];
+      var waves = [];
+      var trail = [];
+
+      function fitCanvas() {
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = W * dpr;
+        canvas.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        draw();
+      }
+
+      var SPECIAL_COLORS = {
+        bomb: 'rgba(37,39,34,0.96)',
+        acid: 'rgba(140,155,95,0.95)',
+        mushroom: 'rgba(170,84,62,0.98)',
+        life: 'rgba(161,93,72,0.95)'
+      };
+
+      function makeBricks() {
+        state.bricks = [];
+        for (var r = 0; r < ROWS; r++) {
+          for (var c = 0; c < COLS; c++) {
+            state.bricks.push({
+              x: PAD + c * (brickW + GAP),
+              y: PAD + r * (BRICK_H + GAP),
+              w: brickW,
+              h: BRICK_H,
+              r: r,
+              c: c,
+              type: 'normal',
+              color: COLORS[r % COLORS.length],
+              alive: true,
+              regrowAt: null
+            });
+          }
+        }
+        assignSpecials();
+      }
+
+      // 少量特殊砖：炸弹 1、酸液 2、菌子 2、生命 1。
+      function assignSpecials() {
+        var pool = state.bricks.slice();
+        [['bomb', 1], ['acid', 2], ['mushroom', 2], ['life', 1]].forEach(function (spec) {
+          for (var i = 0; i < spec[1] && pool.length; i++) {
+            var pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+            pick.type = spec[0];
+          }
+        });
+      }
+
+      function resetBall() {
+        ball.x = state.paddleX;
+        ball.y = paddleY - ballR - 2;
+        ball.vx = 0;
+        ball.vy = 0;
+        ball.stuck = true;
+        state.speed = 400;
+      }
+
+      function resetGame() {
+        state.score = 0;
+        state.lives = 3;
+        state.over = false;
+        state.won = false;
+        state.paddleX = W / 2;
+        state.targetX = W / 2;
+        drops = [];
+        hearts = [];
+        bumps = 0;
+        shards = [];
+        waves = [];
+        trail = [];
+        state.slowT = 0;
+        makeBricks();
+        resetBall();
+        updateHud();
+        hintEl.textContent = '按空格开始';
+        draw();
+      }
+
+      function updateHud() {
+        scoreEl.textContent = String(state.score).padStart(3, '0');
+        var dots = '';
+        for (var i = 0; i < 3; i++) {
+          dots += i < state.lives ? '●' : '<span class="off">●</span>';
+        }
+        livesEl.innerHTML = dots;
+      }
+
+      function serve() {
+        if (state.over || state.won) {
+          resetGame();
+          state.running = true;
+          launch();
+          return;
+        }
+        state.running = true;
+        if (ball.stuck) launch();
+      }
+
+      function launch() {
+        ball.stuck = false;
+        var angle = (-60 + Math.random() * 40) * Math.PI / 180;
+        ball.vx = Math.sin(angle) * state.speed;
+        ball.vy = -Math.abs(Math.cos(angle) * state.speed);
+        hintEl.textContent = '继续';
+      }
+
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        state.bricks.forEach(function (b) {
+          if (!b.alive) {
+            if (b.type === 'mushroom' && b.regrowAt !== null) {
+              ctx.save();
+              ctx.setLineDash([6, 5]);
+              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = 'rgba(201,188,168,0.65)';
+              roundRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2, 3);
+              ctx.stroke();
+              ctx.restore();
+            }
+            return;
+          }
+
+          ctx.fillStyle = SPECIAL_COLORS[b.type] || b.color;
+          roundRect(b.x, b.y, b.w, b.h, 3);
+          ctx.fill();
+
+          var cx = b.x + b.w / 2;
+          var cy = b.y + b.h / 2;
+          if (b.type === 'bomb') {
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(243,240,233,0.95)';
+            ctx.fill();
+          } else if (b.type === 'acid') {
+            ctx.beginPath();
+            ctx.arc(cx - 8, cy + 3, 3.2, 0, Math.PI * 2);
+            ctx.arc(cx + 7, cy - 3, 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(243,240,233,0.75)';
+            ctx.fill();
+          } else if (b.type === 'mushroom') {
+            // 马里奥蘑菇式的白点点。
+            ctx.save();
+            roundRect(b.x, b.y, b.w, b.h, 3);
+            ctx.clip();
+            ctx.fillStyle = 'rgba(243,240,233,0.92)';
+            for (var ry = b.y + 7; ry < b.y + b.h - 2; ry += 8) {
+              for (var rx = b.x + 10; rx < b.x + b.w - 4; rx += 20) {
+                ctx.beginPath();
+                ctx.arc(rx, ry, 2.6, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+            ctx.restore();
+          } else if (b.type === 'life') {
+            ctx.fillStyle = 'rgba(243,240,233,0.95)';
+            ctx.font = '700 15px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('♥', cx, cy + 1);
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+          }
+        });
+
+        drops.forEach(function (d) {
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(140,155,95,0.95)';
+          ctx.fill();
+        });
+
+        hearts.forEach(function (h) {
+          ctx.save();
+          ctx.translate(h.x, h.y);
+          ctx.rotate(h.rot);
+          ctx.fillStyle = 'rgba(161,93,72,1)';
+          ctx.font = '700 18px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('♥', 0, 0);
+          ctx.restore();
+        });
+
+        drawFx();
+
+        ctx.fillStyle = state.slowT > 0 ? 'rgba(122,134,86,0.95)' : 'rgba(37,39,34,0.9)';
+        roundRect(state.paddleX - paddleW / 2, paddleY, paddleW, paddleH, paddleH / 2);
+        ctx.fill();
+
+        if (!ball.stuck) {
+          trail.unshift({ x: ball.x, y: ball.y });
+          if (trail.length > 9) trail.pop();
+          trail.forEach(function (t, i) {
+            if (i === 0) return;
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, ballR * (1 - i * 0.055), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(161,93,72,' + (0.16 * (1 - i / trail.length)) + ')';
+            ctx.fill();
+          });
+        } else {
+          trail.length = 0;
+        }
+
+        var speed = Math.hypot(ball.vx, ball.vy);
+        var stretch = Math.min(1.34, 1 + speed / 2400);
+        ctx.save();
+        ctx.translate(ball.x, ball.y);
+        if (speed > 8) ctx.rotate(Math.atan2(ball.vy, ball.vx));
+        ctx.beginPath();
+        ctx.ellipse(0, 0, ballR * stretch, ballR / Math.sqrt(stretch), 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(161,93,72,1)';
+        ctx.fill();
+        ctx.restore();
+
+        if (state.over || state.won) {
+          ctx.fillStyle = 'rgba(243,240,233,0.86)';
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = 'rgba(37,39,34,1)';
+          ctx.textAlign = 'center';
+          ctx.font = '700 40px Inter, sans-serif';
+          ctx.fillText(state.won ? 'CLEARED.' : 'GAME OVER.', W / 2, H / 2 - 8);
+          ctx.font = '400 16px Inter, sans-serif';
+          ctx.fillStyle = 'rgba(102,113,106,1)';
+          ctx.fillText('按空格 / 点击画面再来一局', W / 2, H / 2 + 28);
+          ctx.textAlign = 'left';
+        }
+      }
+
+      function breakBrick(b) {
+        if (!b.alive) return;
+        b.alive = false;
+
+        if (b.type === 'mushroom') {
+          state.score += 5;
+          b.regrowAt = bumps + 3;
+        } else {
+          state.score += 10;
+        }
+        state.speed = Math.min(620, state.speed + 6);
+        spawnShards(b);
+
+        if (b.type === 'bomb') {
+          sfx.boom();
+          spawnWave(b.x + b.w / 2, b.y + b.h / 2, '37,39,34', 150);
+          explode(b);
+        } else if (b.type === 'acid') {
+          sfx.acid();
+          spawnAcid(b);
+        } else if (b.type === 'life') {
+          sfx.heart();
+          spawnHeart(b);
+        }
+
+        updateHud();
+      }
+
+      // 碎片：砖块被打碎时炸出去的小块。
+      function spawnShards(b) {
+        for (var i = 0; i < 7; i++) {
+          shards.push({
+            x: b.x + Math.random() * b.w,
+            y: b.y + Math.random() * b.h,
+            vx: (Math.random() - 0.5) * 280,
+            vy: -Math.random() * 210 - 40,
+            size: 3 + Math.random() * 4,
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 14,
+            life: 1,
+            color: SPECIAL_COLORS[b.type] || b.color
+          });
+        }
+      }
+
+      // 冲击波：从击中的那一点扩散开的圆环。
+      function spawnWave(x, y, rgb, maxR) {
+        waves.push({ x: x, y: y, r: 8, maxR: maxR || 72, a: 1, rgb: rgb || '161,93,72' });
+      }
+
+      function updateFx(dt) {
+        for (var i = shards.length - 1; i >= 0; i--) {
+          var s = shards[i];
+          s.vy += 760 * dt;
+          s.x += s.vx * dt;
+          s.y += s.vy * dt;
+          s.rot += s.vr * dt;
+          s.life -= dt * 1.15;
+          if (s.life <= 0 || s.y > H + 24) shards.splice(i, 1);
+        }
+        for (var j = waves.length - 1; j >= 0; j--) {
+          var w = waves[j];
+          w.r += (w.maxR - w.r) * Math.min(1, dt * 10);
+          w.a -= dt * 2.4;
+          if (w.a <= 0) waves.splice(j, 1);
+        }
+      }
+
+      function drawFx() {
+        waves.forEach(function (w) {
+          ctx.beginPath();
+          ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(' + w.rgb + ',' + Math.max(0, w.a) * 0.7 + ')';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+        shards.forEach(function (s) {
+          ctx.save();
+          ctx.translate(s.x, s.y);
+          ctx.rotate(s.rot);
+          ctx.globalAlpha = Math.max(0, s.life);
+          ctx.fillStyle = s.color;
+          ctx.fillRect(-s.size / 2, -s.size / 2, s.size, s.size * 0.72);
+          ctx.restore();
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      // 炸弹：清掉自己周围一圈，范围内的炸弹会连锁。
+      function explode(source) {
+        var queue = neighborsOf(source);
+        var guard = 0;
+        while (queue.length && guard < 200) {
+          guard++;
+          var other = queue.shift();
+          if (!other.alive) continue;
+          other.alive = false;
+          state.score += other.type === 'mushroom' ? 5 : 10;
+          spawnShards(other);
+          spawnWave(other.x + other.w / 2, other.y + other.h / 2, '37,39,34', 90);
+          if (other.type === 'mushroom') other.regrowAt = bumps + 3;
+          if (other.type === 'acid') spawnAcid(other);
+          if (other.type === 'life') spawnHeart(other);
+          if (other.type === 'bomb') neighborsOf(other).forEach(function (n) { queue.push(n); });
+        }
+      }
+
+      function neighborsOf(b) {
+        return state.bricks.filter(function (o) {
+          return o.alive && Math.abs(o.r - b.r) <= 1 && Math.abs(o.c - b.c) <= 1;
+        });
+      }
+
+      // 酸液：向上歪着抛出，之后自由落体；落到挡板上会掉一条命。
+      function spawnAcid(b) {
+        var dir = Math.random() < 0.5 ? -1 : 1;
+        drops.push({
+          x: b.x + b.w / 2,
+          y: b.y + b.h / 2,
+          vx: dir * (70 + Math.random() * 90),
+          vy: -(340 + Math.random() * 120),
+          r: 5
+        });
+      }
+
+      // 生命：向上斜着抛出并自转，之后自由落体；在挡板上弹三次后加一条命。
+      function spawnHeart(b) {
+        var dir = Math.random() < 0.5 ? -1 : 1;
+        hearts.push({
+          x: b.x + b.w / 2,
+          y: b.y + b.h / 2,
+          vx: dir * (70 + Math.random() * 90),
+          vy: -(300 + Math.random() * 110),
+          rot: 0,
+          spin: dir * (2.6 + Math.random() * 2),
+          bounces: 0
+        });
+      }
+
+      function updateDrops(dt) {
+        for (var i = drops.length - 1; i >= 0; i--) {
+          var d = drops[i];
+          d.vy += 900 * dt;
+          d.x += d.vx * dt;
+          d.y += d.vy * dt;
+          if (d.x < d.r) {
+            d.x = d.r;
+            d.vx = Math.abs(d.vx);
+          } else if (d.x > W - d.r) {
+            d.x = W - d.r;
+            d.vx = -Math.abs(d.vx);
+          }
+          var onPaddle = d.x > state.paddleX - paddleW / 2 && d.x < state.paddleX + paddleW / 2;
+          if (d.vy > 0 && onPaddle && d.y + d.r >= paddleY && d.y - d.r <= paddleY + paddleH) {
+            drops.splice(i, 1);
+            state.slowT = 1;
+            spawnWave(d.x, paddleY, '140,155,95', 60);
+            sfx.sizzle();
+            continue;
+          }
+          if (d.y - d.r > H) drops.splice(i, 1);
+        }
+      }
+
+      function updateHearts(dt) {
+        for (var i = hearts.length - 1; i >= 0; i--) {
+          var h = hearts[i];
+          h.vy += 760 * dt;
+          h.x += h.vx * dt;
+          h.y += h.vy * dt;
+          h.rot += h.spin * dt;
+          if (h.x < 10) {
+            h.x = 10;
+            h.vx = Math.abs(h.vx);
+          } else if (h.x > W - 10) {
+            h.x = W - 10;
+            h.vx = -Math.abs(h.vx);
+          }
+          var half = paddleW / 2;
+          var onPaddle = h.x > state.paddleX - half - 7 && h.x < state.paddleX + half + 7;
+          if (h.vy > 0 && onPaddle && h.y + 9 >= paddleY && h.y - 9 <= paddleY + paddleH) {
+            h.bounces += 1;
+            if (h.bounces >= 3) {
+              state.lives = Math.min(3, state.lives + 1);
+              updateHud();
+              hearts.splice(i, 1);
+              spawnWave(h.x, paddleY, '161,93,72', 70);
+              sfx.heart();
+              continue;
+            }
+            // 与球同一套反弹规则：落在挡板哪一侧就往哪边斜着飞，越靠边角度越大。
+            var speed = Math.max(320, Math.hypot(h.vx, h.vy));
+            var hit = Math.max(-1, Math.min(1, (h.x - state.paddleX) / half));
+            var angle = hit * (62 * Math.PI / 180);
+            h.vx = Math.sin(angle) * speed;
+            h.vy = -Math.cos(angle) * speed;
+            h.y = paddleY - 10;
+            sfx.click();
+            continue;
+          }
+          if (h.y - 14 > H) hearts.splice(i, 1);
+        }
+      }
+
+      function checkMushrooms() {
+        state.bricks.forEach(function (b) {
+          if (b.type === 'mushroom' && !b.alive && b.regrowAt !== null && bumps >= b.regrowAt) {
+            // 再生后就变成普通砖块。
+            b.alive = true;
+            b.type = 'normal';
+            b.regrowAt = null;
+          }
+        });
+      }
+
+      function bounceOffBrick(b) {
+        var nearestX = Math.max(b.x, Math.min(ball.x, b.x + b.w));
+        var nearestY = Math.max(b.y, Math.min(ball.y, b.y + b.h));
+        var dx = ball.x - nearestX;
+        var dy = ball.y - nearestY;
+        var dist = Math.hypot(dx, dy);
+        if (dist > ballR) return false;
+
+        breakBrick(b);
+        bumps += 1;
+        checkMushrooms();
+        spawnWave(nearestX, nearestY, '161,93,72', 64);
+        sfx.brick(b.r);
+
+        if (dist === 0) {
+          ball.vy = -ball.vy;
+          return true;
+        }
+        var nx = dx / dist;
+        var ny = dy / dist;
+        var dot = ball.vx * nx + ball.vy * ny;
+        ball.vx -= 2 * dot * nx;
+        ball.vy -= 2 * dot * ny;
+        ball.x = nearestX + nx * (ballR + 0.1);
+        ball.y = nearestY + ny * (ballR + 0.1);
+        return true;
+      }
+
+      function step(dt) {
+        if (state.over || state.won) return;
+
+        state.slowT = Math.max(0, state.slowT - dt);
+        var slowMul = 0.3 + 0.7 * (1 - Math.min(1, state.slowT));
+
+        state.paddleX += (state.targetX - state.paddleX) * Math.min(1, dt * 18 * slowMul);
+        if (held.left !== held.right) {
+          state.paddleX += (held.right ? 1 : -1) * 760 * slowMul * dt;
+        }
+        var half = paddleW / 2;
+        if (state.paddleX < half) state.paddleX = half;
+        if (state.paddleX > W - half) state.paddleX = W - half;
+        state.targetX = state.paddleX;
+
+        updateDrops(dt);
+        updateHearts(dt);
+        updateFx(dt);
+
+        if (ball.stuck) {
+          ball.x = state.paddleX;
+          ball.y = paddleY - ballR - 2;
+          return;
+        }
+
+        if (!state.running) return;
+
+        var steps = Math.ceil((state.speed * dt) / 4);
+        var sub = dt / steps;
+        for (var i = 0; i < steps; i++) {
+          ball.x += ball.vx * sub;
+          ball.y += ball.vy * sub;
+
+          if (ball.x - ballR < 0) {
+            ball.x = ballR;
+            ball.vx = Math.abs(ball.vx);
+            bumps += 1;
+            checkMushrooms();
+            sfx.wall();
+          } else if (ball.x + ballR > W) {
+            ball.x = W - ballR;
+            ball.vx = -Math.abs(ball.vx);
+            bumps += 1;
+            checkMushrooms();
+            sfx.wall();
+          }
+          if (ball.y - ballR < 0) {
+            ball.y = ballR;
+            ball.vy = Math.abs(ball.vy);
+            bumps += 1;
+            checkMushrooms();
+            sfx.wall();
+          }
+
+          for (var j = 0; j < state.bricks.length; j++) {
+            if (state.bricks[j].alive && bounceOffBrick(state.bricks[j])) break;
+          }
+
+          var withinPaddle =
+            ball.x > state.paddleX - half - ballR * 0.5 &&
+            ball.x < state.paddleX + half + ballR * 0.5;
+          if (ball.vy > 0 && withinPaddle && ball.y + ballR >= paddleY && ball.y < paddleY + paddleH) {
+            var hit = (ball.x - state.paddleX) / half;
+            var maxAngle = 62 * Math.PI / 180;
+            var angle = hit * maxAngle;
+            ball.vx = Math.sin(angle) * state.speed;
+            ball.vy = -Math.cos(angle) * state.speed;
+            ball.y = paddleY - ballR - 0.5;
+            bumps += 1;
+            checkMushrooms();
+            sfx.paddle();
+          }
+
+          if (ball.y - ballR > H) {
+            loseLife();
+            return;
+          }
+        }
+
+        var cleared = state.bricks.every(function (b) {
+          return !b.alive && b.regrowAt === null;
+        });
+        if (cleared) {
+          state.won = true;
+          state.running = false;
+          hintEl.textContent = '全部清空';
+          sfx.win();
+        }
+      }
+
+      function loseLife() {
+        state.lives -= 1;
+        sfx.lost();
+        updateHud();
+        if (state.lives <= 0) {
+          state.over = true;
+          state.running = false;
+          hintEl.textContent = '按空格重来';
+          return;
+        }
+        resetBall();
+        hintEl.textContent = '按空格再发一球';
+      }
+
+      var last = 0;
+      function loop(t) {
+        if (!last) last = t;
+        var dt = Math.min(0.033, (t - last) / 1000);
+        last = t;
+        step(dt);
+        draw();
+        window.requestAnimationFrame(loop);
+      }
+
+      function pointerToX(clientX) {
+        var rect = canvas.getBoundingClientRect();
+        return ((clientX - rect.left) / rect.width) * W;
+      }
+
+      canvas.addEventListener('pointermove', function (event) {
+        if (event.pointerType === 'mouse') return;
+        state.targetX = pointerToX(event.clientX);
+      });
+      canvas.addEventListener('pointerdown', function (event) {
+        canvas.focus();
+        if (event.pointerType !== 'mouse') state.targetX = pointerToX(event.clientX);
+        serve();
+      });
+
+      function setHeld(key, value) {
+        if (key === 'ArrowLeft' || key === 'a' || key === 'A') held.left = value;
+        else if (key === 'ArrowRight' || key === 'd' || key === 'D') held.right = value;
+        else return false;
+        return true;
+      }
+
+      window.addEventListener('keydown', function (event) {
+        if (event.key === ' ' || event.code === 'Space') {
+          event.preventDefault();
+          serve();
+        } else if (setHeld(event.key, true)) {
+          event.preventDefault();
+        }
+      });
+      window.addEventListener('keyup', function (event) {
+        if (setHeld(event.key, false)) event.preventDefault();
+      });
+      window.addEventListener('blur', function () {
+        held.left = false;
+        held.right = false;
+      });
+
+      window.addEventListener('resize', fitCanvas);
+
+      resetGame();
+      fitCanvas();
+      window.requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

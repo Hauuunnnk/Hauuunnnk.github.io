@@ -29,7 +29,7 @@
       <span class="nav-sep" aria-hidden="true">/</span>
       <a href="#work">WORK</a>
       <span class="nav-sep" aria-hidden="true">/</span>
-      <a href="#other">BUSINESS</a>
+      <a href="#other">NONE OF MY BUSINESS</a>
     </nav>
     <div class="v13_6"></div>
   </header>
@@ -60,10 +60,30 @@ Come find me — I will probably say yes.</span><span class="v13_24">ZZZ</span><
     <section class="sec-dark">
       <div class="v13_25"></div><span class="v13_26" id="work">02   /   OBJECTS OF OBSESSION</span><span class="v13_27">THINGS</span><span class="v13_28">I BROUGHT</span><span class="v13_29">INTO EXISTENCE.</span><a class="v13_30" href="https://arcanefable.base44.app" target="_blank" rel="noopener noreferrer" aria-label="Open Arcane Fable"></a><a class="v13_30cap link-dark" href="https://arcanefable.base44.app" target="_blank" rel="noopener noreferrer">arcanefable.base44.app ↗</a><span class="v13_31">01</span><!-- TODO: 待补充项目页链接，替换下方 href="#" 后移除 data-pending --><a class="v13_32 link-dark" href="#" data-pending><span>ARCANE</span><span>FABLE</span></a><span class="v13_34">An AI-assisted D&amp;D app for adventures
 with more faithful rules.</span><span class="v13_36">02</span><a class="v13_37 link-dark" href="#" data-pending>HW HELPER</a><span class="v13_38">A group project helping students
-keep up with their homework.</span><span class="v13_38cap">SCAN TO TRY&nbsp;&nbsp;→</span><div class="v13_35"></div><span class="v13_39" id="other">03   /   BUSINESS</span><span class="v13_40">A LIFE IN</span><span class="v13_41">SIDE QUESTS.</span>
+keep up with their homework.</span><span class="v13_38cap">SCAN TO TRY&nbsp;&nbsp;→</span><div class="v13_35"></div><span class="v13_39" id="other">03   /   NONE OF MY BUSINESS, I DON’T HAVE A COMPANY</span><span class="v13_40">A LIFE IN</span><span class="v13_41">SIDE QUESTS.</span>
       <div class="quest-item"><a class="v13_42" href="./dnd.html" aria-label="Dice &amp; Dragons: come play DND with me"></a><a class="v13_45 link-dark" href="./dnd.html">DICE &amp; DRAGONS</a></div>
       <div class="quest-item"><a class="v13_43" href="./vibe.html" aria-label="Vibe coding: Sure I will do vibe coding, AI is too good"></a><a class="v13_46 link-dark" href="./vibe.html">VIBE CODING</a></div>
       <div class="quest-item"><a class="v13_44" href="./sleep.html" aria-label="Sleeping memories"></a><a class="v13_47 link-dark" href="./sleep.html">THE SLEEP STUDIES</a></div>
+      <section class="wall-sec" id="punch">
+        <span class="wall-kicker">04&nbsp;&nbsp; /&nbsp;&nbsp; A WALL, APPARENTLY</span>
+        <span class="wall-title">PUNCH<br />THE <span class="wall-accent">WALL.</span></span>
+        <span class="wall-note">鼠标单击就是一拳。打穿了，后面有个游戏。</span>
+        <div class="wall-wrap">
+          <div class="wall" id="wall" tabindex="0" role="button" aria-label="砖墙：点击或按空格打一拳"></div>
+          <div class="flash" id="flash" aria-hidden="true"></div>
+          <div class="prize" id="prize">
+            <div class="flip-phone" id="flipPhone">
+              <div class="flip-body">
+                <a class="switch" id="flipSwitch" href="./breakout.html" aria-label="去玩打砖块">
+                  <span class="knob"></span>
+                </a>
+                <span class="switch-label">PLAY THE GAME</span>
+              </div>
+              <button class="flip-lid" id="flipLid" type="button">OPEN</button>
+            </div>
+          </div>
+        </div>
+      </section>
       <div class="v13_48"></div><a class="v13_49 link-dark" href="mailto:hankjin@moonshotacademy.cn" data-copy-email="hankjin@moonshotacademy.cn">LET’S TALK ABOUT SOMETHING INTERESTING ↗</a><a class="v13_50 link-dark" href="mailto:hankjin@moonshotacademy.cn" data-copy-email="hankjin@moonshotacademy.cn">hankjin@moonshotacademy.cn</a><span class="v13_51">© 2026 / HANK J.</span>
     </section>
   </div>
@@ -224,6 +244,231 @@ keep up with their homework.</span><span class="v13_38cap">SCAN TO TRY&nbsp;&nbs
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', update);
       update();
+    })();
+  </script>
+
+  <script>
+    // 首页砖墙：一拳砸出一个圆形窟窿；砸空后露出通往游戏页的翻盖开关。
+    (function () {
+      var wall = document.getElementById('wall');
+      if (!wall) return;
+      var flash = document.getElementById('flash');
+      var prize = document.getElementById('prize');
+      var flipPhone = document.getElementById('flipPhone');
+      var flipLid = document.getElementById('flipLid');
+
+      var COLS = 10;
+      var ROWS = 6;
+      var COLORS = ['rgba(161,93,72,1)', 'rgba(150,86,66,1)', 'rgba(170,101,78,1)'];
+      var bricks = [];
+      var actx = null;
+      var noiseBuf = null;
+
+      function audio() {
+        if (!actx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          actx = new AC();
+        }
+        if (actx.state === 'suspended') actx.resume();
+        return actx;
+      }
+
+      function noiseBurst(dur, cutoff, vol) {
+        var ac = audio();
+        if (!ac) return;
+        if (!noiseBuf) {
+          noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.4), ac.sampleRate);
+          var data = noiseBuf.getChannelData(0);
+          for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        }
+        var t = ac.currentTime;
+        var src = ac.createBufferSource();
+        src.buffer = noiseBuf;
+        var filter = ac.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(cutoff, t);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(160, cutoff * 0.2), t + dur);
+        var gain = ac.createGain();
+        gain.gain.setValueAtTime(vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(filter).connect(gain).connect(ac.destination);
+        src.start(t);
+        src.stop(t + dur + 0.02);
+      }
+
+      function thump() {
+        var ac = audio();
+        if (!ac) return;
+        var t = ac.currentTime;
+        var osc = ac.createOscillator();
+        var gain = ac.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120, t);
+        osc.frequency.exponentialRampToValueAtTime(44, t + 0.18);
+        gain.gain.setValueAtTime(0.34, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        osc.connect(gain).connect(ac.destination);
+        osc.start(t);
+        osc.stop(t + 0.22);
+      }
+
+      function chime() {
+        var ac = audio();
+        if (!ac) return;
+        [523, 659, 784, 1046].forEach(function (freq, i) {
+          var t = ac.currentTime + i * 0.1;
+          var osc = ac.createOscillator();
+          var gain = ac.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(0.07, t + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+          osc.connect(gain).connect(ac.destination);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        });
+      }
+
+      function build() {
+        wall.innerHTML = '';
+        bricks = [];
+        wall.classList.remove('cleared');
+        prize.classList.remove('on');
+        flipPhone.classList.remove('open');
+        for (var i = 0; i < COLS * ROWS; i++) {
+          var brick = document.createElement('div');
+          brick.className = 'brick';
+          brick.style.background = COLORS[i % COLORS.length];
+          wall.appendChild(brick);
+          bricks.push(brick);
+        }
+      }
+
+      function ring(x, y, size) {
+        var el = document.createElement('div');
+        el.className = 'ring';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.width = size + 'px';
+        el.style.height = size + 'px';
+        el.style.margin = (-size / 2) + 'px 0 0 ' + (-size / 2) + 'px';
+        wall.appendChild(el);
+        window.setTimeout(function () { el.remove(); }, 560);
+      }
+
+      function burst(x, y, radius) {
+        for (var i = 0; i < 18; i++) {
+          var shard = document.createElement('div');
+          shard.className = 'shard';
+          var size = radius * 0.07 + Math.random() * 8;
+          shard.style.left = x + 'px';
+          shard.style.top = y + 'px';
+          shard.style.width = size + 'px';
+          shard.style.height = (size * 0.72) + 'px';
+          shard.style.background = i % 3 === 0
+            ? 'rgba(243,240,233,0.95)'
+            : 'rgba(37,39,34,0.9)';
+          var angle = Math.random() * Math.PI * 2;
+          var dist = radius * (0.5 + Math.random() * 1.5);
+          shard.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+          shard.style.setProperty('--dy', Math.sin(angle) * dist + 46 + 'px');
+          shard.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+          wall.appendChild(shard);
+          window.setTimeout(function (el) {
+            return function () { el.remove(); };
+          }(shard), 760);
+        }
+      }
+
+      // 砖块是横长条，用椭圆判定才能砸出接近圆形的窟窿：横向半径大、纵向小。
+      function holeSize() {
+        var ref = bricks[0];
+        return {
+          rx: (ref ? ref.offsetWidth : 92) * 1.7,
+          ry: (ref ? ref.offsetHeight : 40) * 2.6
+        };
+      }
+
+      function crackAround(x, y, size) {
+        bricks.forEach(function (b) {
+          if (b.classList.contains('gone') || b.classList.contains('cracked')) return;
+          var dx = (b.offsetLeft + b.offsetWidth / 2 - x) / (size.rx * 1.9);
+          var dy = (b.offsetTop + b.offsetHeight / 2 - y) / (size.ry * 1.9);
+          if (dx * dx + dy * dy < 1) b.classList.add('cracked');
+        });
+      }
+
+      function reveal() {
+        prize.classList.add('on');
+        chime();
+        window.setTimeout(function () {
+          flipPhone.classList.add('open');
+          noiseBurst(0.05, 2600, 0.08);
+        }, 600);
+      }
+
+      function punchAt(x, y) {
+        if (wall.classList.contains('cleared')) return;
+        var size = holeSize();
+        var radius = (size.rx + size.ry) / 2;
+
+        flash.style.setProperty('--fx', (x / wall.offsetWidth) * 100 + '%');
+        flash.style.setProperty('--fy', (y / wall.offsetHeight) * 100 + '%');
+        flash.classList.remove('on');
+        void flash.offsetWidth;
+        flash.classList.add('on');
+
+        wall.classList.remove('shake');
+        void wall.offsetWidth;
+        wall.classList.add('shake');
+
+        thump();
+        noiseBurst(0.16, 3200, 0.18);
+        ring(x, y, radius * 2.4);
+
+        var hits = bricks.filter(function (b) {
+          if (b.classList.contains('gone')) return false;
+          var dx = (b.offsetLeft + b.offsetWidth / 2 - x) / size.rx;
+          var dy = (b.offsetTop + b.offsetHeight / 2 - y) / size.ry;
+          return dx * dx + dy * dy < 1;
+        });
+
+        // 卡帧：先定住 55ms，再塌下去。
+        window.setTimeout(function () {
+          hits.forEach(function (b) {
+            b.classList.add('gone');
+            b.classList.remove('cracked');
+          });
+          burst(x, y, radius);
+          crackAround(x, y, size);
+          if (bricks.every(function (b) { return b.classList.contains('gone'); })) {
+            wall.classList.add('cleared');
+            window.setTimeout(reveal, 300);
+          }
+        }, 55);
+      }
+
+      wall.addEventListener('pointerdown', function (event) {
+        var rect = wall.getBoundingClientRect();
+        var k = wall.offsetWidth / rect.width;
+        punchAt((event.clientX - rect.left) * k, (event.clientY - rect.top) * k);
+      });
+
+      wall.addEventListener('keydown', function (event) {
+        if (event.key === ' ' || event.key === 'Enter') {
+          event.preventDefault();
+          punchAt(wall.offsetWidth / 2, wall.offsetHeight / 2);
+        }
+      });
+
+      flipLid.addEventListener('click', function () {
+        flipPhone.classList.toggle('open');
+        noiseBurst(0.05, 2600, 0.08);
+      });
+
+      build();
     })();
   </script>
 </body>
